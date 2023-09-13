@@ -1,9 +1,17 @@
 module Data.AssocMap
   ( AssocMap(..)
-  , member
+  , empty
+  , insert
+  , delete
   , alter
+  , member
+  , lookup
+  , findWithDefault
   )
 where
+
+import Prelude hiding (lookup)
+import Data.Maybe (fromMaybe)
 
 newtype AssocMap k v = AssocMap [(k, v)]
     deriving (Show)
@@ -17,17 +25,8 @@ insert key value = alter (const (Just value)) key
 delete :: Eq k => k -> AssocMap k v -> AssocMap k v
 delete = alter (const Nothing)
 
--- alter :: Eq k => (Maybe v -> Maybe v) -> k -> AssocMap k v -> AssocMap k v
--- alter f key (AssocMap []) = maybe (AssocMap []) (\value -> AssocMap [(key, value)]) (f Nothing)
--- alter f key ((key', value') : xs)
---     | key == key' =
---         maybe xs (\value -> (key, value) : xs) (f Nothing)
---     | otherwise =
---         (key', value') : alter f key xs
-
-
 alter :: Eq k => (Maybe v -> Maybe v) -> k -> AssocMap k v -> AssocMap k v
-alter f key (AssocMap xs) = AssocMap (alter' f key xs)
+alter fn k (AssocMap as) = AssocMap (alter' fn k as)
   where
     alter' :: Eq k => (Maybe v -> Maybe v) -> k -> [(k, v)] -> [(k, v)]
     alter' f key [] =
@@ -42,11 +41,14 @@ alter f key (AssocMap xs) = AssocMap (alter' f key xs)
       | otherwise =
         (key', value') : alter' f key xs
 
-
 member :: Eq k => k -> AssocMap k v -> Bool
-member k (AssocMap xs) = case lookup k xs of
-    Nothing -> False
-    _       -> True
+member key (AssocMap as) = member' key as
+  where
+    member' :: Eq k => k -> [(k, v)] -> Bool
+    member' _ [] = False
+    member' x ((x', _) : xs)
+        | x' == x = True
+        | otherwise = member' x xs
 
 -- hasNode :: Eq k => AssocMap k v -> k -> Bool
 -- hasNode = flip member
@@ -58,3 +60,14 @@ member k (AssocMap xs) = case lookup k xs of
 
 -- myAssocList :: [(Int, Int)]
 -- myAssocList = [(1,1), (2,2), (3,3)] :: [(Int, Int)]
+
+lookup :: (Eq k) => k -> AssocMap k v -> Maybe v
+lookup k (AssocMap as) = lookup' k as
+  where
+    lookup' _ [] = Nothing
+    lookup' key ((key', value) : xs)
+      | key == key' = Just value
+      | otherwise = lookup' key xs
+
+findWithDefault :: (Eq k) => v -> k -> AssocMap k v -> v
+findWithDefault defaultValue key ascMap = fromMaybe defaultValue (lookup key ascMap)
