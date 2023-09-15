@@ -10,37 +10,38 @@ module Graph
   , bfsSearch
   ) where
 
-import qualified Data.AssocMap as M
+import qualified Data.HashMap.Lazy as M
+import Data.Hashable (Hashable)
 import qualified Data.List as L
 
-type DiGraph a = M.AssocMap a [a]
+type DiGraph a = M.HashMap a [a]
 
-addEdge :: (Eq a) => (a, a) -> DiGraph a -> DiGraph a
+addEdge :: Hashable a => (a, a) -> DiGraph a -> DiGraph a
 addEdge (node, child) = M.alter insertEdge node
   where
     insertEdge Nothing = Just [child]
     insertEdge (Just nodes) =
       Just (L.nub (child : nodes))
 
-addEdges :: (Eq a) => [(a, a)] -> DiGraph a -> DiGraph a
+addEdges :: Hashable a => [(a, a)] -> DiGraph a -> DiGraph a
 addEdges edges graph = foldr addEdge graph edges
 
-buildDiGraph :: (Eq a) => [(a, [a])] -> DiGraph a
+buildDiGraph :: Hashable a => [(a, [a])] -> DiGraph a
 buildDiGraph nodes = go nodes M.empty
   where
     go [] graph = graph
     go ((key, value) : xs) graph = M.insert key value (go xs graph)
 
-children :: (Eq a) => a -> DiGraph a -> [a]
+children :: Hashable a => a -> DiGraph a -> [a]
 children = M.findWithDefault []
 
-deleteNodes :: Eq a => [a] -> DiGraph a -> DiGraph a
+deleteNodes :: Hashable a => [a] -> DiGraph a -> DiGraph a
 deleteNodes edges graph = foldr M.delete graph edges
 
 type SearchState a = ([a], DiGraph a, DiGraph a)
 data SearchResult a = Unsuccessful | Successful (DiGraph a)
 
-bfsSearch :: forall a. Eq a => DiGraph a -> a -> a -> Maybe [a]
+bfsSearch :: forall a. Hashable a => DiGraph a -> a -> a -> Maybe [a]
 bfsSearch graph start end
   | start == end = Just [start]
   | otherwise =

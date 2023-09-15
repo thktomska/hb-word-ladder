@@ -12,11 +12,11 @@ module PermutationMap
 where
 
 import Prelude hiding (lookup)
-import qualified Data.AssocMap as M
+import qualified Data.HashMap.Lazy as M
 import qualified Data.List as L
 import Data.Maybe (fromMaybe)
 
-type PermutationMap = M.AssocMap String [String]
+type PermutationMap = M.HashMap String [String]
 
 empty :: PermutationMap
 empty = M.empty
