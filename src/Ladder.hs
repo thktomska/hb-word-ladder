@@ -2,6 +2,7 @@ module Ladder
   ( readDictionary
   , mkLadderGraph
   , computeCandidates
+  , ladderSolve
   )
 where
 
@@ -37,3 +38,8 @@ computeCandidates map' word =
     removed = [L.delete x word | x <- word]
     modified =
       [x : L.delete y word | x <- ['a' .. 'z'], y <- word, x /= y]
+
+ladderSolve :: Dictionary -> String -> String -> Maybe [String]
+ladderSolve dict start end =
+  let g = mkLadderGraph dict
+   in G.bfsSearch g start end
